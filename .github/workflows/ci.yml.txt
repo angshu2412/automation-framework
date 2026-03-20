@@ -1,0 +1,95 @@
+name: Automation Tests CI
+
+on:
+  # Runs on every push to main branch
+  push:
+    branches: [ main, master ]
+  # Runs on every pull request targeting main
+  pull_request:
+    branches: [ main, master ]
+  # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Cucumber tags to run'
+        required: false
+        default: '@regression'
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1 - checkout your code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2 - setup Java 11
+      - name: Set up Java 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      # Step 3 - cache Maven dependencies
+      # Avoids re-downloading on every run - saves 2-3 minutes
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Step 4 - install Chrome
+      - name: Install Google Chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub \
+            | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] \
+            http://dl.google.com/linux/chrome/deb/ stable main" \
+            >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
+      # Step 5 - run tests headless
+      - name: Run automation tests
+        run: |
+          mvn clean test \
+            -Dheadless=true \
+            -Dbrowser=chrome \
+            -Dcucumber.filter.tags="${{ github.event.inputs.tags || '@regression' }}"
+
+      # Step 6 - generate Allure report
+      - name: Generate Allure report
+        if: always()  # run even if tests fail
+        run: mvn allure:report
+
+      # Step 7 - upload test results as artifact
+      # Downloadable from GitHub Actions run page
+      - name: Upload Allure report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report
+          path: target/site/allure-maven-plugin
+          retention-days: 30
+
+      # Step 8 - upload screenshots on failure
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: screenshots/
+          retention-days: 7
+
+      # Step 9 - upload logs
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: logs/
+          retention-days: 7

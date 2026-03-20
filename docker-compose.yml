@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  automation-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: automation-framework
+    environment:
+      # Override config.properties values via environment variables
+      - BROWSER=chrome
+      - HEADLESS=true
+    volumes:
+      # Mount reports folder so you can access results after container exits
+      - ./target:/app/target
+      - ./screenshots:/app/screenshots
+      - ./logs:/app/logs
+    # Exit code matches test result - 0=pass, 1=fail
+    # Important for CI to know if tests passed
+    command: >
+      mvn clean test
+      -Dheadless=true
+      -Dbrowser=chrome
+      -Dcucumber.filter.tags=@regression

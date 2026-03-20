@@ -1,0 +1,33 @@
+# Maven build output
+target/
+
+# Eclipse project files
+.classpath
+.project
+.settings/
+.factorypath
+
+# IntelliJ (in case you switch later)
+.idea/
+*.iml
+
+# Logs - generated at runtime
+logs/
+
+# Screenshots - generated at runtime
+screenshots/
+
+# Allure results - generated at runtime
+allure-results/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment specific - never commit secrets
+*.env
+
+# Keep these - needed for CI
+!.github/
+!.github/workflows/
+!.github/workflows/ci.yml
