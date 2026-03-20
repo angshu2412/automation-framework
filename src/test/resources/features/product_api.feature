@@ -3,7 +3,7 @@ Feature: Product API Validation
   I want to verify product data consistency between API and UI
   So that I can ensure the frontend displays accurate product information
 
-@api
+@api @regression
   Scenario: Verify first product details match between API and UI
     Given I fetch product at index 0 from the API
     When I navigate to the products page

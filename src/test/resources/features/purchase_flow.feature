@@ -3,7 +3,7 @@ Feature: User Purchase Flow
   I want to register, purchase products and delete my account
   So that I can validate the end to end purchase flow
 
-@regression
+@regression @ui
  Scenario: End to end purchase flow with account creation and deletion
     Given the application is launched
     When I register as a new user
